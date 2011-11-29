@@ -9,14 +9,15 @@
  */
 class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 {
-    const LIVE_URL = "https://api.authorize.net/xml/v1/request.api";
-    const TEST_URL = "https://apitest.authorize.net/xml/v1/request.api";
-    
+	const LIVE_URL = "https://api.authorize.net/xml/v1/request.api";
+	const TEST_URL = "https://apitest.authorize.net/xml/v1/request.api";
+	
 
-    private $options;
+	private $options;
 	private $AUTHORIZE_NET_CIM_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd';
-     
-    private $CIM_ACTIONS = array(
+    private $CARD_CODE_ERRORS = array('M', 'N', 'P', 'S', 'U');
+    private $AVS_ERRORS = array('A', 'B', 'E', 'G', 'N', 'P', 'R', 'S', 'U', 'W', 'X', 'Y', 'Z');
+	private $CIM_ACTIONS = array(
 		'create_customer_profile' => 'createCustomerProfile',
 		'create_customer_payment_profile' => 'createCustomerPaymentProfile',
 		'create_customer_shipping_address' => 'createCustomerShippingAddress',
@@ -31,82 +32,84 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 		'update_customer_shipping_address' => 'updateCustomerShippingAddress',
 		'create_customer_profile_transaction' => 'createCustomerProfileTransaction',
 		'validate_customer_payment_profile' => 'validateCustomerPaymentProfile'
-    );
+	);
 	
 	private $CIM_VALIDATION_MODES = array(
 		'none' => 'none',
 		'test' => 'testMode',
 		'live' => 'liveMode',
 		'old' => 'oldLiveMode'
-    );
+	);
 	private $CIM_TRANSACTION_TYPES = array(
-        'auth_capture' => 'profileTransAuthCapture',
-        'auth_only' => 'profileTransAuthOnly',
-        'capture_only' => 'profileTransCaptureOnly',
-        'prior_auth_capture' => 'profileTransPriorAuthCapture',
-        'refund' => 'profileTransRefund',
-        'void' => 'profileTransVoid'
+		'auth_capture' => 'profileTransAuthCapture',
+		'auth_only' => 'profileTransAuthOnly',
+		'capture_only' => 'profileTransCaptureOnly',
+		'prior_auth_capture' => 'profileTransPriorAuthCapture',
+		'refund' => 'profileTransRefund',
+		'void' => 'profileTransVoid'
 	);
-      
+	  
 	private $BANK_ACCOUNT_TYPES = array(
-        'checking' => 'checking',
-        'savings' => 'savings',
-        'business_checking' => 'businessChecking'
+		'checking' => 'checking',
+		'savings' => 'savings',
+		'business_checking' => 'businessChecking'
 	);
-      
-    private $ECHECK_TYPES = array(
-        'ccd' => 'CCD',
-        'ppd' => 'PPD'
+	  
+	private $ECHECK_TYPES = array(
+		'ccd' => 'CCD',
+		'ppd' => 'PPD'
 	);
-      
-    public static  $homepage_url = 'http://www.authorize.net/';
-    public static  $display_name = 'Authorize.Net CIM';
-    public static  $supported_countries = array('US');
-    public static  $supported_cardtypes = array('visa', 'master', 'american_express', 'discover');
-    
-    public function __construct($options)
-    {
-        $this->required_options('login, password', $options);
+	  
+	public static  $homepage_url = 'http://www.authorize.net/';
+	public static  $display_name = 'Authorize.Net CIM';
+	public static  $supported_countries = array('US');
+	public static  $supported_cardtypes = array('visa', 'master', 'american_express', 'discover');
+	
+	public function __construct($options)
+	{
+		$this->required_options('login, password', $options);
 
-        $this->options = $options;
-    }
+		$this->options = $options;
+	}
 	
 	public function create_customer_profile($options = array())
 	{
-        # TODO Add requires
-        $request = $this->build_request('create_customer_profile', $options);
-        return $this->commit('create_customer_profile', $request);
-    }
+		# TODO Add requires
+		$request = $this->build_request('create_customer_profile', $options);
+		return $this->commit('create_customer_profile', $request);
+	}
 	
 	public function update_customer_profile($options = array())
 	{
 		$this->required_options('profile', $options);
 		$this->required_options('customer_profile_id', $options['profile']);
-        $request = $this->build_request('update_customer_profile', $options);
-        return $this->commit('update_customer_profile', $request);
-    }
+		$request = $this->build_request('update_customer_profile', $options);
+		return $this->commit('update_customer_profile', $request);
+	}
 
 	public function create_customer_payment_profile($options = array())
 	{
 		$this->required_options('customer_profile_id, payment_profile', $options);
-        $request = $this->build_request('create_customer_payment_profile', $options);
-        return $this->commit('create_customer_profile', $request);
-    }
+		$this->required_options('payment', $options['payment_profile']);
+
+		$request = $this->build_request('create_customer_payment_profile', $options);
+		return $this->commit('create_customer_profile', $request);
+	}
 	
 	public function update_customer_payment_profile($options = array())
 	{
 		$this->required_options('customer_profile_id, payment_profile', $options);
 		$this->required_options('customer_payment_profile_id', $options['payment_profile']);
-        $request = $this->build_request('update_customer_payment_profile', $options);
-        return $this->commit('update_customer_payment_profile', $request);
-    }
+		$request = $this->build_request('update_customer_payment_profile', $options);
+		return $this->commit('update_customer_payment_profile', $request);
+	}
 	
 	public function validate_customer_payment_profile($options = array())
 	{
 		$this->required_options('customer_profile_id, customer_payment_profile_id, validation_mode', $options);
-        $request = $this->build_request('validate_customer_payment_profile', $options);
-        return $this->commit('validate_customer_payment_profile', $request);
-    }
+		$request = $this->build_request('validate_customer_payment_profile', $options);
+		return $this->commit('validate_customer_payment_profile', $request);
+	}
 	
 	public function create_customer_profile_transaction($options)
 	{
@@ -132,17 +135,17 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 				$this->required_options('customer_profile_id, amount, customer_payment_profile_id', $options['transaction']);
 				break;
 		}
-        $request = $this->build_request('create_customer_profile_transaction', $options);
-        return $this->commit('create_customer_profile_transaction', $request);
-    }
+		$request = $this->build_request('create_customer_profile_transaction', $options);
+		return $this->commit('create_customer_profile_transaction', $request);
+	}
 	
 	public function create_customer_profile_transaction_for_refund($options)
 	{
 		$this->required_options('transaction', $options);
 		$options['transaction']['type'] = 'refund';
 		$this->required_options('trans_id, amount', $options['transaction']);
-        $request = $this->build_request('create_customer_profile_transaction', $options);
-        return $this->commit('create_customer_profile_transaction', $request);
+		$request = $this->build_request('create_customer_profile_transaction', $options);
+		return $this->commit('create_customer_profile_transaction', $request);
 	}
 	
 	public function create_customer_profile_transaction_for_void($options)
@@ -150,125 +153,125 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 		$this->required_options('transaction', $options);
 		$options['transaction']['type'] = 'void';
 		$this->required_options('trans_id', $options['transaction']);
-        $request = $this->build_request('create_customer_profile_transaction', $options);
-        return $this->commit('create_customer_profile_transaction', $request);
+		$request = $this->build_request('create_customer_profile_transaction', $options);
+		return $this->commit('create_customer_profile_transaction', $request);
 	}
 	
 	public function create_customer_shipping_address($options)
 	{
 		$this->required_options('customer_profile_id, address', $options);
-        $request = $this->build_request('create_customer_shipping_address', $options);
-        return $this->commit('create_customer_shipping_address', $request);
+		$request = $this->build_request('create_customer_shipping_address', $options);
+		return $this->commit('create_customer_shipping_address', $request);
 	}
 	
 	public function delete_customer_payment_profile($options)
 	{
 		$this->required_options('customer_profile_id, customer_payment_profile_id', $options);
-        $request = $this->build_request('delete_customer_payment_profile', $options);
-        return $this->commit('delete_customer_payment_profile', $request);
+		$request = $this->build_request('delete_customer_payment_profile', $options);
+		return $this->commit('delete_customer_payment_profile', $request);
 	}
 	
 	public function delete_customer_profile($options)
 	{
 		$this->required_options('customer_profile_id', $options);
-        $request = $this->build_request('delete_customer_profile', $options);
-        return $this->commit('delete_customer_profile', $request);
+		$request = $this->build_request('delete_customer_profile', $options);
+		return $this->commit('delete_customer_profile', $request);
 	}
 	
 	public function delete_customer_shipping_address($options)
 	{
 		$this->required_options('customer_profile_id, customer_address_id', $options);
-        $request = $this->build_request('delete_customer_shipping_address', $options);
-        return $this->commit('delete_customer_shipping_address', $request);
+		$request = $this->build_request('delete_customer_shipping_address', $options);
+		return $this->commit('delete_customer_shipping_address', $request);
 	}
 	
 	public function update_customer_shipping_address($options)
 	{
 		$this->required_options('customer_profile_id, address', $options);
 		$this->required_options('customer_address_id', $options['address']);
-        $request = $this->build_request('update_customer_shipping_address', $options);
-        return $this->commit('update_customer_shipping_address', $request);
+		$request = $this->build_request('update_customer_shipping_address', $options);
+		return $this->commit('update_customer_shipping_address', $request);
 	}
 	
 	public function get_customer_shipping_address($options)
 	{
 		$this->required_options('customer_profile_id, customer_address_id', $options);
-        $request = $this->build_request('get_customer_shipping_address', $options);
-        return $this->commit('get_customer_shipping_address', $request);
+		$request = $this->build_request('get_customer_shipping_address', $options);
+		return $this->commit('get_customer_shipping_address', $request);
 	}
 	
 	public function get_customer_payment_profile($options)
 	{
 		$this->required_options('customer_profile_id, customer_payment_profile_id', $options);
-        $request = $this->build_request('get_customer_payment_profile', $options);
-        return $this->commit('get_customer_payment_profile', $request);
+		$request = $this->build_request('get_customer_payment_profile', $options);
+		return $this->commit('get_customer_payment_profile', $request);
 	}
 	
 	public function get_customer_profile($options)
 	{
 		$this->required_options('customer_profile_id', $options);
-        $request = $this->build_request('get_customer_profile', $options);
-        return $this->commit('get_customer_profile', $request);
+		$request = $this->build_request('get_customer_profile', $options);
+		return $this->commit('get_customer_profile', $request);
 	}
-    
-    private function build_request($action,$options)
-    {
+	
+	private function build_request($action,$options)
+	{
 		if(in_array($action,$this->CIM_ACTIONS)) {
 			throw new Exception('Invalid Customer Information Manager Action: '.$action);
 		}
 		
 		//$options = $this->options + $options;
 		
-		$string = '<?xml version="1.0" encoding="utf-8"?><'.$this->CIM_ACTIONS[$action].'Request xmlns="'.$this->AUTHORIZE_NET_CIM_NAMESPACE.'"></'.$this->CIM_ACTIONS[$action].'Request>';
+		$string = '<?xml version="1.0" encoding="utf-8"?><'.$this->CIM_ACTIONS[$action].'Request xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="'.$this->AUTHORIZE_NET_CIM_NAMESPACE.'"></'.$this->CIM_ACTIONS[$action].'Request>';
 		
-        $xml = new SimpleXMLElement($string,LIBXML_NOWARNING);//
-        $this->add_merchant_authentication($xml);
-        $build_method = 'build_'.$action.'_request';
-        $this->$build_method($xml,$options);
-        //unset($options['login'],$options['password']);
-        //$this->_addObject($xml,$options);
-        
-        $xml_text = $xml->asXML();
-        Kohana::$log->add(Log::DEBUG,'XML Request :request',array(':request'=>$xml_text));
+		$xml = new SimpleXMLElement($string,LIBXML_NOWARNING);//
+		$this->add_merchant_authentication($xml);
+		$build_method = 'build_'.$action.'_request';
+		$this->$build_method($xml,$options);
+		//unset($options['login'],$options['password']);
+		//$this->_addObject($xml,$options);
+		
+		$xml_text = $xml->asXML();
+		Kohana::$log->add(Log::DEBUG,'XML Request :request',array(':request'=>$xml_text));
 		return $xml_text;
 	}
-    
-    private function build_create_customer_profile_request($xml, $options)
-    {
+	
+	private function build_create_customer_profile_request($xml, $options)
+	{
 		$this->add_profile($xml,$options['profile']);
 	}
 	
 	private function build_create_customer_payment_profile_request($xml, $options)
 	{
-        $xml->addChild('customerProfileId', $options['customer_profile_id']);
-        $paymentprofilexml = $xml->addChild('paymentProfile');
-        $this->add_payment_profile($paymentprofilexml, $options['payment_profile']);
+		$xml->addChild('customerProfileId', $options['customer_profile_id']);
+		$paymentprofilexml = $xml->addChild('paymentProfile');
+		$this->add_payment_profile($paymentprofilexml, $options['payment_profile']);
 		isset($options['validation_mode']) && $xml->addChild('validationMode', $this->CIM_VALIDATION_MODES[$options['validation_mode']]);
 	}
 	
 	private function build_create_customer_profile_transaction_request($xml, $options)
 	{
 		$this->add_transaction($xml, $options['transaction']);
-		isset($options['test']) && $options==TRUE && $xml->addChild('extraOptions','x_test_request=TRUE');
+		isset($options['test']) && $xml->addChild('extraOptions','x_test_request=TRUE');
 	}
 	
 	private function build_create_customer_shipping_address_request($xml, $options)
 	{
 		$xml->addChild('customerProfileId', $options['customer_profile_id']);
-        $addressxml = $xml->addChild('address');
-        $this->add_address($addressxml, $options['address']);
+		$addressxml = $xml->addChild('address');
+		$this->add_address($addressxml, $options['address']);
 	}
 	
 	private function build_delete_customer_shipping_address_request($xml, $options)
 	{
 		$xml->addChild('customerProfileId', $options['customer_profile_id']);
-        $xml->addChild('customerAddressId', $options['customer_address_id']);
+		$xml->addChild('customerAddressId', $options['customer_address_id']);
 	}
 	
 	private function build_delete_customer_payment_profile_request($xml, $options)
 	{
 		$xml->addChild('customerProfileId', $options['customer_profile_id']);
-        $xml->addChild('customerPaymentProfileId', $options['customer_payment_profile_id']);
+		$xml->addChild('customerPaymentProfileId', $options['customer_payment_profile_id']);
 	}
 	
 	private function build_delete_customer_profile_request($xml, $options)
@@ -284,13 +287,13 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 	private function build_get_customer_payment_profile_request($xml, $options)
 	{
 		$xml->addChild('customerProfileId', $options['customer_profile_id']);
-        $xml->addChild('customerPaymentProfileId', $options['customer_payment_profile_id']);
+		$xml->addChild('customerPaymentProfileId', $options['customer_payment_profile_id']);
 	}
 	
 	private function build_get_customer_shipping_address_request($xml, $options)
 	{
 		$xml->addChild('customerProfileId', $options['customer_profile_id']);
-        $xml->addChild('customerAddressId', $options['customer_address_id']);
+		$xml->addChild('customerAddressId', $options['customer_address_id']);
 	}
 	
 	private function build_update_customer_profile_request($xml, $options)
@@ -301,23 +304,23 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 	private function build_update_customer_payment_profile_request($xml, $options)
 	{
 		$xml->addChild('customerProfileId', $options['customer_profile_id']);
-        $paymentprofilexml = $xml->addChild('paymentProfile');
-        $this->add_payment_profile($paymentprofilexml, $options['payment_profile']);
+		$paymentprofilexml = $xml->addChild('paymentProfile');
+		$this->add_payment_profile($paymentprofilexml, $options['payment_profile']);
 		isset($options['validation_mode']) && $xml->addChild('validationMode', $this->CIM_VALIDATION_MODES[$options['validation_mode']]);
 	}
 	
 	private function build_update_customer_shipping_address_request($xml, $options)
 	{
 		$xml->addChild('customerProfileId', $options['customer_profile_id']);
-        $addressxml = $xml->addChild('address');
-        $this->add_address($addressxml, $options['address']);
+		$addressxml = $xml->addChild('address');
+		$this->add_address($addressxml, $options['address']);
 	}
 	
 	private function build_validate_customer_payment_profile_request($xml, $options)
 	{
-        $xml->addChild('customerProfileId', $options['customer_profile_id']);
-        $xml->addChild('customerPaymentProfileId', $options['customer_payment_profile_id']);
-        isset($options['customer_address_id']) && $xml->addChild('customerShippingAddressId', $options['customer_address_id']);
+		$xml->addChild('customerProfileId', $options['customer_profile_id']);
+		$xml->addChild('customerPaymentProfileId', $options['customer_payment_profile_id']);
+		isset($options['customer_address_id']) && $xml->addChild('customerShippingAddressId', $options['customer_address_id']);
 		isset($options['validation_mode']) && $xml->addChild('validationMode', $this->CIM_VALIDATION_MODES[$options['validation_mode']]);
 	}
 	
@@ -328,19 +331,20 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 		$profile->addChild('description',$options['description']);
 		$profile->addChild('email',$options['email']);
 		if($update)
+		{
 			$profile->addChild('customerProfileId',$options['customer_profile_id']);
-		else {
-			isset($options['payment_profiles']) && $this->add_payment_profiles($xml,$options['payment_profiles']);
-			isset($options['ship_to_list']) && $this->add_ship_to_list($xml,$options['ship_to_list']);
+		} else {
+			isset($options['payment_profiles']) && $this->add_payment_profiles($profile,$options['payment_profiles']);
+			isset($options['ship_to_list']) && $this->add_ship_to_list($profile,$options['ship_to_list']);
 		}
 		return $this;
 	}
 	
 	private function add_merchant_authentication($xml)
 	{
-        $auth = $xml->addChild('merchantAuthentication');
-        $auth->addChild('name',$this->options['login']);
-        $auth->addChild('transactionKey',$this->options['password']);
+		$auth = $xml->addChild('merchantAuthentication');
+		$auth->addChild('name',$this->options['login']);
+		$auth->addChild('transactionKey',$this->options['password']);
 		return $this;
 	}
 	
@@ -354,7 +358,8 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 
 	private function add_payment_profile($xml, $options)
 	{
-		# 'individual' or 'business' (optional)
+		//$profile = $xml->addChild('profile');
+		//'individual' or 'business' (optional)
 		isset($options['customer_type']) && $xml->addChild('customerType',$options['customer_type']);
 		
 		if(is_array($options['bill_to'])) {
@@ -363,8 +368,8 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 		}
 		if(is_array($options['payment'])) {
 			$payment = $xml->addChild('payment');
-            $this->add_credit_card($payment, $options['payment']['credit_card']);
-            $this->add_bank_account($payment, $options['payment']['bank_account']);
+			$this->add_credit_card($payment, $options['payment']['credit_card']);
+			isset($options['payment']['bank_account']) && $this->add_bank_account($payment, $options['payment']['bank_account']);
 		}
 		isset($options['customer_payment_profile_id']) && $xml->addChild('customerPaymentProfileId',$options['customer_payment_profile_id']);
 		return $this;
@@ -376,13 +381,13 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 		$this->add_address($ship_to_list,$options);
 		return $this;
 	}
-    /*
-     * Adds customer’s bank account information
-     * Note: This element should only be included
-     * when the payment method is bank account.
-     */
-    private function add_bank_account($xml, $bank_account)
-    {
+	/*
+	 * Adds customer’s bank account information
+	 * Note: This element should only be included
+	 * when the payment method is bank account.
+	 */
+	private function add_bank_account($xml, $bank_account)
+	{
 		if(!in_array($bank_account['account_type'],$this->BANK_ACCOUNT_TYPES)) {
 			throw new Exception('Invalid Bank Account Type: '.$bank_account['account_type']);
 		}
@@ -421,14 +426,14 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 		$driverlicense = $xml->addChild('driversLicense');
 		$driverlicense->addChild('state',$driver_license['state']);
 		$driverlicense->addChild('number',$driver_license['number']);
-        // The date of birth listed on the customer's driver's license
-        // YYYY-MM-DD
+		// The date of birth listed on the customer's driver's license
+		// YYYY-MM-DD
 		$driverlicense->addChild('dateOfBirth',$driver_license['date_of_birth']);
 		return $this;
 	}
 	
-    private function add_order($xml, $order)
-    {
+	private function add_order($xml, $order)
+	{
 		$orderxml = $xml->addChild('order');
 		isset($order['invoice_number']) && $orderxml->addChild('invoiceNumber',$order['invoice_number']);
 		isset($order['description']) && $orderxml->addChild('description',$order['description']);
@@ -436,28 +441,28 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 	}
 	
 	private function add_address($xml, $address)
-    {
+	{
 		$xml->addChild('firstName', $address['first_name']);
-        $xml->addChild('lastName', $address['last_name']);
-        $xml->addChild('company', $address['company']);
-        isset($address['address1']) && $xml->addChild('address', $address['address1']);
-        isset($address['address']) && $xml->addChild('address', $address['address']);
-        $xml->addChild('city', $address['city']);
-        $xml->addChild('state', $address['state']);
-        $xml->addChild('zip', $address['zip']);
-        $xml->addChild('country', $address['country']);
-        isset($address['phone_number']) && $xml->addChild('phoneNumber', $address['phone_number']);
-        isset($address['fax_number']) && $xml->addChild('faxNumber', $address['fax_number']);
-        isset($address['customer_address_id']) && $xml->addChild('customerAddressId', $address['customer_address_id']);
+		$xml->addChild('lastName', $address['last_name']);
+		isset($address['company']) && $xml->addChild('company', $address['company']);
+		isset($address['address']) && $xml->addChild('address', $address['address']);
+		$xml->addChild('city', $address['city']);
+		$xml->addChild('state', $address['state']);
+		$xml->addChild('zip', $address['zip']);
+		$xml->addChild('country', $address['country']);
+		isset($address['phone_number']) && $xml->addChild('phoneNumber', $address['phone_number']);
+		isset($address['fax_number']) && $xml->addChild('faxNumber', $address['fax_number']);
+		isset($address['customer_address_id']) && $xml->addChild('customerAddressId', $address['customer_address_id']);
 		return $this;
-    }
-    
+	}
+	
 	private function add_transaction($xml, $transaction)
 	{
-		if(!in_array($transaction['type'],$this->CIM_TRANSACTION_TYPES)) {
+		if(!in_array($transaction['type'],array_keys($this->CIM_TRANSACTION_TYPES))) {
 			throw new Exception('Invalid Customer Information Manager Transaction Type: '.$transaction['type']);
 		}
 		$transactionxml = $xml->addChild('transaction');
+		$transactionxml = $transactionxml->addChild($this->CIM_TRANSACTION_TYPES[$transaction['type']]);
 		switch($transaction['type']){
 			case 'void':
 				isset($transaction['customer_profile_id']) && $transactionxml->addChild('customerProfileId',$transaction['customer_profile_id']);
@@ -489,54 +494,119 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 		isset($transaction['order']) && $this->add_order($transactionxml, $transaction['order']);
 	}
 
-    private function expdate(Merchant_Billing_CreditCard $creditcard)
-    {
-        $year = $this->cc_format($creditcard->year, 'two_digits');
-        $month = $this->cc_format($creditcard->month, 'two_digits');
-        return $month . $year;
-    }
+	private function expdate(Merchant_Billing_CreditCard $creditcard)
+	{
+		if($creditcard->year=='XX' && $creditcard->month=='XX')
+		{
+			return 'XXXX';
+		}
+		$year = $this->cc_format($creditcard->year, 'four_digits');
+		$month = $this->cc_format($creditcard->month, 'two_digits');
+		return $year .'-'. $month;
+	}
+	private function cim_directresponse_parse($response)
+	{
+		$direct_response_fields = explode(',',$response);
+		return array(
+            'response_code' => $direct_response_fields[0],
+            'response_subcode' => $direct_response_fields[1],
+            'response_reason_code' => $direct_response_fields[2],
+            'message' => $direct_response_fields[3],
+            'approval_code' => $direct_response_fields[4],
+            'avs_response' => $direct_response_fields[5],
+            'transaction_id' => $direct_response_fields[6],
+            'invoice_number' => $direct_response_fields[7],
+            'order_description' => $direct_response_fields[8],
+            'amount' => $direct_response_fields[9],
+            'method' => $direct_response_fields[10],
+            'transaction_type' => $direct_response_fields[11],
+            'customer_id' => $direct_response_fields[12],
+            'first_name' => $direct_response_fields[13],
+            'last_name' => $direct_response_fields[14],
+            'company' => $direct_response_fields[15],
+            'address' => $direct_response_fields[16],
+            'city' => $direct_response_fields[17],
+            'state' => $direct_response_fields[18],
+            'zip_code' => $direct_response_fields[19],
+            'country' => $direct_response_fields[20],
+            'phone' => $direct_response_fields[21],
+            'fax' => $direct_response_fields[22],
+            'email_address' => $direct_response_fields[23],
+            'ship_to_first_name' => $direct_response_fields[24],
+            'ship_to_last_name' => $direct_response_fields[25],
+            'ship_to_company' => $direct_response_fields[26],
+            'ship_to_address' => $direct_response_fields[27],
+            'ship_to_city' => $direct_response_fields[28],
+            'ship_to_state' => $direct_response_fields[29],
+            'ship_to_zip_code' => $direct_response_fields[30],
+            'ship_to_country' => $direct_response_fields[31],
+            'tax' => $direct_response_fields[32],
+            'duty' => $direct_response_fields[33],
+            'freight' => $direct_response_fields[34],
+            'tax_exempt' => $direct_response_fields[35],
+            'purchase_order_number' => $direct_response_fields[36],
+            'md5_hash' => $direct_response_fields[37],
+            'card_code' => $direct_response_fields[38],
+            'cardholder_authentication_verification_response' => $direct_response_fields[39]
+		);
+	}
+	private function cim_parse($obj)
+	{
+		$array=array();
+		foreach($obj as $key=>$value){
+			$key = strtolower(preg_replace('/[A-Z]/','_$0',$key));
+			if(count($value)>0){
+				$array[$key] = $this->cim_parse($value);
+			}else{
+				$array[$key] = (string) $value;
+			}
+		}
+		return $array;
+	}
+	private function cim_success_from($response)
+	{
+		return $response['messages']['result_code'] == 'Ok';
+	}
 	
-    private function cim_parse($body)
-    {
-		$xml = new SimpleXMLElement($body,LIBXML_NOWARNING);//
-        $response = array();
-        $response['ref_id'] = $xml->refId;
-        $response['result_code'] = $xml->messages->resultCode;
-        $response['code'] = $xml->messages->message->code;
-        $response['text'] = $xml->messages->message->text;
-        $response['customer_profile_id'] = $xml->customerProfileId;
-        return $response;
-    }
-    
-    private function cim_success_from($response)
-    {
-        return $response['result_code'] == 'Ok';
-    }
-    
-    private function cim_message_from($response)
-    {
-        return $response['text'];
-    }
-    
-    private function commit($action, $request)
-    {
-        $url = $this->is_test() ? self::TEST_URL : self::LIVE_URL;
-        
+	private function cim_message_from($response)
+	{
+        if ($response['messages']['result_code'] != 'Ok') {
+            if (in_array($response['direct_response']['cardholder_authentication_verification_response'], $this->CARD_CODE_ERRORS)) {
+                $cvv_messages = Merchant_Billing_CvvResult::messages();
+                return $cvv_messages[$response['direct_response']['cardholder_authentication_verification_response']];
+            }
+            if (in_array($response['direct_response']['avs_response'], $this->AVS_ERRORS)) {
+                $avs_messages = Merchant_Billing_AvsResult::messages();
+                return $avs_messages[$response['direct_response']['avs_response']];
+            }
+        }
+		
+		return $response['messages']['message']['text'];
+	}
+	
+	private function commit($action, $request)
+	{
+		$url = $this->is_test() ? self::TEST_URL : self::LIVE_URL;
+		
 		$headers = array("Content-type: text/xml");
 		
-        $data = $this->ssl_post($url, $request, array('headers'=>$headers));
+		$data = $this->ssl_post($url, $request, array('headers'=>$headers));
 		Kohana::$log->add(Log::DEBUG,'Merchant Response :response',array(':response'=>$data));
-
-        $response = $this->cim_parse($data);
-
-        return new Merchant_Billing_Response(
-            $this->cim_success_from($response),
-            $this->cim_message_from($response),
-            $response,
-            array(
-                'test' => $this->is_test(),
-                'authorization' => $response['customer_profile_id'],
-            )
-        );
-    }
+		
+		$xml = new SimpleXMLElement($data,LIBXML_NOWARNING);
+		$response = $this->cim_parse($xml);
+		
+		if(isset($response['direct_response'])) {
+			$response['direct_response'] = $this->cim_directresponse_parse($response['direct_response']);
+		}
+		return new Merchant_Billing_Response(
+			$this->cim_success_from($response),
+			$this->cim_message_from($response),
+			$response,
+			array(
+				'test' => $this->is_test(),
+				//'authorization' => $response['customer_profile_id'],
+			)
+		);
+	}
 }
