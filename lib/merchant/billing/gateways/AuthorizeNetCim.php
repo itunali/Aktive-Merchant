@@ -220,19 +220,14 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 			throw new Exception('Invalid Customer Information Manager Action: '.$action);
 		}
 		
-		//$options = $this->options + $options;
-		
 		$string = '<?xml version="1.0" encoding="utf-8"?><'.$this->CIM_ACTIONS[$action].'Request xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="'.$this->AUTHORIZE_NET_CIM_NAMESPACE.'"></'.$this->CIM_ACTIONS[$action].'Request>';
 		
 		$xml = new SimpleXMLElement($string,LIBXML_NOWARNING);//
 		$this->add_merchant_authentication($xml);
 		$build_method = 'build_'.$action.'_request';
 		$this->$build_method($xml,$options);
-		//unset($options['login'],$options['password']);
-		//$this->_addObject($xml,$options);
 		
 		$xml_text = $xml->asXML();
-		Kohana::$log->add(Log::DEBUG,'XML Request :request',array(':request'=>$xml_text));
 		return $xml_text;
 	}
 	
@@ -358,7 +353,6 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 
 	private function add_payment_profile($xml, $options)
 	{
-		//$profile = $xml->addChild('profile');
 		//'individual' or 'business' (optional)
 		isset($options['customer_type']) && $xml->addChild('customerType',$options['customer_type']);
 		
@@ -570,7 +564,7 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 	
 	private function cim_message_from($response)
 	{
-		if ($response['messages']['result_code'] != 'Ok') {
+		if ($response['messages']['result_code'] != 'Ok' && isset($response['direct_response'])) {
 			if (in_array($response['direct_response']['cardholder_authentication_verification_response'], $this->CARD_CODE_ERRORS)) {
 				$cvv_messages = Merchant_Billing_CvvResult::messages();
 				return $cvv_messages[$response['direct_response']['cardholder_authentication_verification_response']];
@@ -591,7 +585,6 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 		$headers = array("Content-type: text/xml");
 		
 		$data = $this->ssl_post($url, $request, array('headers'=>$headers));
-		Kohana::$log->add(Log::DEBUG,'Merchant Response :response',array(':response'=>$data));
 		
 		$xml = new SimpleXMLElement($data,LIBXML_NOWARNING);
 		$response = $this->cim_parse($xml);
@@ -605,7 +598,6 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 			$response,
 			array(
 				'test' => $this->is_test(),
-				//'authorization' => $response['customer_profile_id'],
 			)
 		);
 	}
