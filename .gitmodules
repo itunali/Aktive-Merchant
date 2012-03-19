@@ -1,0 +1,3 @@
+[submodule "lib/merchant/billing/gateways/braintree"]
+	path = lib/merchant/billing/gateways/braintree
+	url = https://github.com/braintree/braintree_php.git

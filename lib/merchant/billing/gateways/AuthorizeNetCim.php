@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Description of Merchant_Billing_AuthorizeNet
+ * Description of Merchant_Billing_AuthorizeNetCim
  *
  * @package Aktive Merchant
- * @author  Andreas Kollaros
+ * @author  Ibrahim Tunali <ibrahimtunali@gmail.com>
  * @license http://www.opensource.org/licenses/mit-license.php
  */
 class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
@@ -67,6 +67,7 @@ class Merchant_Billing_AuthorizeNetCim extends Merchant_Billing_Gateway
 	
 	public function __construct($options)
 	{
+		parent::__construct($options);
 		$this->required_options('login, password', $options);
 
 		$this->options = $options;
