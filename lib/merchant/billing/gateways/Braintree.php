@@ -64,25 +64,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 					break;
 				case 'find':
 					$result = Braintree_Customer::find($options);
-					/*return new Merchant_Billing_Response(
-						true,
-						'',
-						array(
-							'merchant_customer_id' => $result->id,
-							'first_name' => $result->firstName,
-							'last_name' => $result->lastName,
-							'company' => $result->company,
-							'email' => $result->email,
-							'phone' => $result->phone,
-							'fax' => $result->fax,
-							'website' => $result->website,
-							'creditcards' => $result->creditCards,
-							'addresses' => $result->addresses,
-							'custom_fields' => $result->customFields,
-						),
-						array('test'=>$this->is_test())
-					);*/
-					break;
+				break;
 			}
 		} catch (Braintree_Exception_NotFound $e) {
 				throw new Merchant_Billing_Exception($e->getMessage()?$e->getMessage():'Item Not Found');
@@ -116,7 +98,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		!empty($options['address_ext']) && $data['extendedAddress'] = $options['address_ext'];
 		!empty($options['state']) && $data['region'] = $options['state'];
 		!empty($options['zip']) && $data['postalCode'] = $options['zip'];
-		!empty($options['country']) && $data['countryCodeAlpha2'] = Merchant_Country::find($options['country'])->code('alpha2');
+		!empty($options['country']) && $data['countryCodeAlpha3'] = Merchant_Country::find($options['country'])->code('alpha3')->__toString();
 		return $this->commit('add_address',$data);
 	}
 
@@ -133,7 +115,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		!empty($options['address_ext']) && $data['extendedAddress'] = $options['address_ext'];
 		!empty($options['state']) && $data['region'] = $options['state'];
 		!empty($options['zip']) && $data['postalCode'] = $options['zip'];
-		!empty($options['country']) && $data['countryCodeAlpha2'] = Merchant_Country::find($options['country'])->code('alpha2');
+		!empty($options['country']) && $data['countryCodeAlpha3'] = Merchant_Country::find($options['country'])->code('alpha3')->__toString();
 		return $this->commit('update_address',$data);
 	}
 
@@ -237,26 +219,16 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		if($options['_creditcard'] instanceof Merchant_Billing_CreditCard) {
 			$creditcard = $options['_creditcard'];
 			$data['creditCard'] = array(
-				'number' => $creditcard->number,
 				'expirationDate' => date('m/y',$creditcard->expire_date()->expiration()),
-				'cvv' => $creditcard->verification_value,
 				'cardholderName' => $creditcard->name(),
+				'cvv' => $creditcard->verification_value,
 			);
+			// invalid card number means do not update
+			!empty($creditcard->number) && $data['creditCard']['number'] = $creditcard->number;
+
 			if(isset($options['billing_address_id'])) {
 				$data['creditCard']['billingAddressId'] = $options['billing_address_id'];
 			}
-			/*if(isset($options['billing_first_name'])) {
-				$data['creditCard']['billingAddress']['firstName'] = $options['billing_first_name'];
-				!empty($options['billing_last_name']) && $data['creditCard']['billingAddress']['lastName'] = $options['billing_last_name'];
-				!empty($options['billing_company']) && $data['creditCard']['billingAddress']['company'] = $options['billing_company'];
-				!empty($options['billing_city']) && $data['creditCard']['billingAddress']['locality'] = $options['billing_city'];
-				!empty($options['billing_address']) && $data['creditCard']['billingAddress']['streetAddress'] = $options['billing_address'];
-				!empty($options['billing_address_ext']) && $data['creditCard']['billingAddress']['extendedAddress'] = $options['billing_address_ext'];
-				!empty($options['billing_state']) && $data['creditCard']['billingAddress']['region'] = $options['billing_state'];
-				!empty($options['billing_zip']) && $data['creditCard']['billingAddress']['postalCode'] = $options['billing_zip'];
-				!empty($options['billing_country']) && $data['creditCard']['billingAddress']['countryCodeAlpha2'] = Merchant_Country::find($options['billing_country'])->code('alpha2');
-				$data['creditCard']['billingAddress']['options'] = array('updateExisting'=> true);
-			}*/
 			if(isset($options['options'])) {
 				isset($options['options']['verify_card']) && $data['creditCard']['options']['verifyCard'] = $options['options']['verify_card'];
 				!empty($options['options']['update_token']) && $data['creditCard']['options']['updateExistingToken'] = $options['options']['update_token'];
