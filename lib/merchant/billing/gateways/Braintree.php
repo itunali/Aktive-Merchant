@@ -14,7 +14,7 @@ if (!class_exists('Braintree') && !file_exists($default_bt_path)) {
 	require_once($default_bt_path);
 }
 
-class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Merchant_Billing_Gateway_Store, Merchant_Billing_Gateway_Credit, Merchant_Billing_Gateway_Charge, Merchant_Billing_Gateway_Credit
+class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Merchant_Billing_Gateway_Store, Merchant_Billing_Gateway_Credit, Merchant_Billing_Gateway_Charge
 {
 	public static $default_currency = 'USD';
 	public static $supported_countries = array('US');
@@ -515,7 +515,8 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		return $this->commit('unstore',$customer_vault_id);
 	}
 	
-	public function credit($money, $identification = NULL, $options = array())
+	// disabled credit to creditcard transactions by default
+	public function credit_to_creditcard($money, $identification = NULL, $options = array())
 	{
 		if(is_null($identification)) {
 			return $this->commit('credit',array('token'=>$identification,'amount'=>$money));
