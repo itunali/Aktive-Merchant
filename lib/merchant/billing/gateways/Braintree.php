@@ -91,7 +91,6 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		} catch (Braintree_Exception_NotFound $e) {
 				throw new Merchant_Billing_Exception($e->getMessage()?$e->getMessage():'Item Not Found');
 		}
-		//print_r($result);
 		$result = $this->_parse_result($result);
 		
 		$response_options = array();
