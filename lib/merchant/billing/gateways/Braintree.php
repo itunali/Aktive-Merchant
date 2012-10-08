@@ -23,7 +23,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 	public static $display_name = 'Braintree';
 
 	private $options = array();
-	
+
 	public function __construct($options)
 	{
 		parent::__construct($options);
@@ -82,9 +82,9 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 					break;
 				case 'credit':
 					if(isset($options['token'])){
-						$result = Braintree_Transaction::credit($options['token'],array('amount'=>$options['amount']));	
+						$result = Braintree_Transaction::credit($options['token'],array('amount'=>$options['amount']));
 					} else {
-						$result = Braintree_Transaction::credit($options);	
+						$result = Braintree_Transaction::credit($options);
 					}
 					break;
 			}
@@ -92,14 +92,14 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 				throw new Merchant_Billing_Exception($e->getMessage()?$e->getMessage():'Item Not Found');
 		}
 		$result = $this->_parse_result($result);
-		
+
 		$response_options = array();
 		$response_options['test'] = $this->is_test();
 		isset($result['transaction_id']) && $response_options['authorization'] = $result['transaction_id'];
 		isset($result['fraud_review']) && $response_options['fraud_review'] = $result['fraud_review'];
 		isset($result['avs_result']) && $response_options['avs_result'] = $result['avs_result'];
 		isset($result['cvv_result']) && $response_options['cvv_result'] = $result['cvv_result'];
-		
+
 		return new Merchant_Billing_Response(
 			isset($result['success'])?$result['success']:true,
 			isset($result['message'])?$result['message']:'',
@@ -149,27 +149,27 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 				$return['sended_params'] = $result->params;
 				$return['errors'] = $result->errors->deepAll();
 				$return['message'] = $result->message;
-				if(isset($result->errors->verification)){
-					$return['fraud_review'] = $result->errors->verification->processorResponseCode==2000?true:false;
+				if(isset($result->verification)){
+					$return['fraud_review'] = $result->verification['processorResponseCode']==2000?true:false;
 					$return['avs_result'] = array(
-						'code'=>$result->errors->verification->avsErrorResponseCode,
-						'street_match'=>$result->errors->verification->avsStreetAddressResponseCode,
-						'postal_match'=>$result->errors->verification->avsPostalCodeResponseCode
+						'code'=>$result->verification['avsErrorResponseCode'],
+						'street_match'=>$result->verification['avsStreetAddressResponseCode'],
+						'postal_match'=>$result->verification['avsPostalCodeResponseCode']
 					);
-					$return['cvv_result'] = $result->errors->verification->cvvResponseCode;
+					$return['cvv_result'] = $result->verification['cvvResponseCode'];
 				}
 
 			case 'Braintree_Result_Successful':
 				//'authorization' => $response['transaction_id'],
 				$return['success'] = $result->success;
 				if(isset($result->customer)){
-					$return = array_merge($return,$this->_parse_result($result->customer));	
+					$return = array_merge($return,$this->_parse_result($result->customer));
 				}
 				if(isset($result->address)){
-					$return = array_merge($return,$this->_parse_result($result->address));	
+					$return = array_merge($return,$this->_parse_result($result->address));
 				}
 				if(isset($result->transaction)){
-					$return = array_merge($return,$this->_parse_result($result->transaction));	
+					$return = array_merge($return,$this->_parse_result($result->transaction));
 				}
 				break;
 			case 'Braintree_Customer':
@@ -376,7 +376,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 	{
 		if(is_numeric($money))
 		{
-			$money = $this->amount($money);	
+			$money = $this->amount($money);
 		}
 		return $this->commit('refund',array('transaction_id'=>$identification,'amount'=>$money));
 	}
@@ -385,10 +385,10 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 	{
 		if(is_numeric($money))
 		{
-			$money = $this->amount($money);	
+			$money = $this->amount($money);
 		}
 		return $this->commit('settle',array('transaction_id'=>$authorization,'amount'=>$money));
-		
+
 	}
 	private function _transaction($money, Merchant_Billing_CreditCard $creditcard = NULL, $options = array())
 	{
@@ -401,13 +401,13 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		$options['settle'] = true;
 		return $this->_transaction($money, $creditcard, $options);
 	}
-	
+
 	public function authorize($money, Merchant_Billing_CreditCard $creditcard = NULL, $options = array())
 	{
 		$options['settle'] = false;
 		return $this->_transaction($money, $creditcard, $options);
 	}
-	
+
 	private function _transaction_data_build($options)
 	{
 		$this->required_options('amount', $options);
@@ -493,7 +493,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		}
 		return $data;
 	}
-	
+
 	public function update($customer_vault_id, Merchant_Billing_CreditCard $creditcard = NULL, $options)
 	{
 		$data = $this->_data_build(array_merge(array('_creditcard'=>$creditcard),$options));
@@ -513,7 +513,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		}
 		return $this->commit('unstore',$customer_vault_id);
 	}
-	
+
 	// disabled credit to creditcard transactions by default
 	public function credit_to_creditcard($money, $identification = NULL, $options = array())
 	{
@@ -530,7 +530,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 			));
 		}
 	}
-	
+
 	public function get_customer_profile($options)
 	{
 		$this->required_options('customer_profile_id', $options);
