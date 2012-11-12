@@ -479,7 +479,10 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		// only This amount is not automatically added to the total amount of this transaction
 		// you have to manually add the tax amount to the transaction’s amount
 		!empty($options['tax_amount']) && $data['taxAmount'] = $options['tax_amount'];
-		isset($options['settle']) && $data['options'] = array('submitForSettlement'=>$options['settle']);
+		$data['options'] = array();
+		isset($options['settle']) && $data['options']['submitForSettlement'] = $options['settle'];
+		isset($options['store_in_vault_on_success']) && $data['options']['storeInVaultOnSuccess'] = $options['store_in_vault_on_success'];
+		isset($options['add_billing_address_to_payment_method']) && $data['options']['addBillingAddressToPaymentMethod'] = $options['add_billing_address_to_payment_method'];
 		isset($options['tax']) && $data['taxExempt'] = $options['tax'];
 		if(isset($options['custom_fields']) && is_array($options['custom_fields'])) {
 			$data['customFields'] = $options['custom_fields'];
