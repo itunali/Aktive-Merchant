@@ -345,6 +345,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		!empty($options['phone']) && $data['phone'] = $options['phone'];
 		!empty($options['fax']) && $data['fax'] = $options['fax'];
 		!empty($options['website']) && $data['website'] = $options['website'];
+		isset($options['device_data']) && $data['deviceData'] = $options['device_data'];
 
 		if($options['_creditcard'] instanceof Merchant_Billing_CreditCard) {
 			$creditcard = $options['_creditcard'];
@@ -484,6 +485,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		isset($options['store_in_vault_on_success']) && $data['options']['storeInVaultOnSuccess'] = $options['store_in_vault_on_success'];
 		isset($options['add_billing_address_to_payment_method']) && $data['options']['addBillingAddressToPaymentMethod'] = $options['add_billing_address_to_payment_method'];
 		isset($options['tax']) && $data['taxExempt'] = $options['tax'];
+		isset($options['device_data']) && $data['deviceData'] = $options['device_data'];
 		if(isset($options['custom_fields']) && is_array($options['custom_fields'])) {
 			$data['customFields'] = $options['custom_fields'];
 		}
