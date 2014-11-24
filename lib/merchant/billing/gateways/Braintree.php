@@ -64,6 +64,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 					$merchant_customer_id = $options['_merchant_customer_id'];
 					unset($options['_merchant_customer_id']);
 					$result = Braintree_Customer::update($merchant_customer_id, $options);
+					print_r($result);
 					break;
 				case 'transaction_find':
 					$result = Braintree_Transaction::find($options);
@@ -181,6 +182,9 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 				}
 				foreach ($result->addresses as $addr) {
 					$return['addresses'][] = $this->_parse_result($addr);
+				}
+				foreach ($result->paypalAccounts as $paypal_account) {
+					$return['paypalaccounts'][] = $this->_parse_result($paypal_account);
 				}
 			case 'Braintree_Transaction_CustomerDetails':
 				$return['merchant_customer_id'] = $result->id;
@@ -318,6 +322,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 				$return['subscription_details'] = $this->_parse_result($result->subscriptionDetails);
 				$return['addons'] = $result->addOns;
 				$return['discounts'] = $result->discounts;
+				$return['paypal_details'] = $this->_parse_result($result->paypalDetails);
 				break;
 			case 'Braintree_Transaction_StatusDetails':
 				$return['timestamp'] = $result->timestamp;
@@ -329,6 +334,21 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 			case 'Braintree_Descriptor':
 				$return['name'] = $result->name;
 				$return['phone'] = $result->phone;
+				break;
+			case 'Braintree_Transaction_PayPalDetails':
+				$return['token'] = $result->token;
+				$return['payer_email'] = $result->payerEmail;
+				$return['payment_id'] = $result->paymentId;
+				$return['authorization_id'] = $result->authorizationId;
+				$return['image_url'] = $result->imageUrl;
+				$return['debug_id'] = $result->debugId;
+				$return['payee_email'] = $result->payeeEmail;
+				break;
+			case 'Braintree_PayPalAccount':
+				$return['token'] = $result->token;
+				$return['email'] = $result->email;
+				$return['default'] = $result->default;
+				$return['image_url'] = $result->imageUrl;
 				break;
 		}
 		return $return;
@@ -356,11 +376,20 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 			);
 			// invalid card number means do not update
 			!empty($creditcard->number) && $data['creditCard']['number'] = $creditcard->number;
-
 			if(isset($options['billing_address_id'])) {
 				$data['creditCard']['billingAddressId'] = $options['billing_address_id'];
 			}
 			if(isset($options['options'])) {
+				isset($options['options']['verify_card']) && $data['creditCard']['options']['verifyCard'] = $options['options']['verify_card'];
+				!empty($options['options']['update_token']) && $data['creditCard']['options']['updateExistingToken'] = $options['options']['update_token'];
+			}
+		}
+		if(!empty($options['payment_nonce'])){
+			$data['creditCard'] = array(
+				'paymentMethodNonce' => $options['payment_nonce'],
+			);
+			if(isset($options['options'])) {
+				$data['creditCard']['options'] = array();
 				isset($options['options']['verify_card']) && $data['creditCard']['options']['verifyCard'] = $options['options']['verify_card'];
 				!empty($options['options']['update_token']) && $data['creditCard']['options']['updateExistingToken'] = $options['options']['update_token'];
 			}
@@ -417,6 +446,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		);
 		!empty($options['order_id']) && $data['orderId'] = $options['order_id'];
 		!empty($options['merchant_account_id']) && $data['merchantAccountId'] = $options['merchant_account_id'];
+		!empty($options['recurring']) && $data['recurring'] = $options['recurring'];
 
 		$data['creditCard'] = array();
 		if($options['_creditcard'] instanceof Merchant_Billing_CreditCard) {
@@ -426,6 +456,8 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 			!empty($options['_creditcard']->verification_value) && $data['creditCard']['cvv'] = $options['_creditcard']->verification_value;
 			// store this card on vault
 			!empty($options['token']) && $data['creditCard']['token'] = $options['token'];
+		}elseif(!empty($options['payment_nonce'])){
+			$data['paymentMethodNonce'] = $options['payment_nonce'];
 		}else{
 			// use recorded vault record for card details
 			$this->required_options('token', $options);
@@ -556,4 +588,9 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 		return number_format($money, 2, '.', '');
 	}
 
+	public function generate_unique_id($options = NULL)
+	{
+		$opts = isset($options['customer_id']) ? array('customerID'=>$options['customer_id']) : array();
+		return Braintree_ClientToken::generate($opts);
+	}
 }
