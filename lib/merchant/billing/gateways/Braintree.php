@@ -64,7 +64,6 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 					$merchant_customer_id = $options['_merchant_customer_id'];
 					unset($options['_merchant_customer_id']);
 					$result = Braintree_Customer::update($merchant_customer_id, $options);
-					print_r($result);
 					break;
 				case 'transaction_find':
 					$result = Braintree_Transaction::find($options);
@@ -322,7 +321,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 				$return['subscription_details'] = $this->_parse_result($result->subscriptionDetails);
 				$return['addons'] = $result->addOns;
 				$return['discounts'] = $result->discounts;
-				$return['paypal_details'] = $this->_parse_result($result->paypalDetails);
+				isset($result->paypalDetails) && $return['paypal_details'] = $this->_parse_result($result->paypalDetails);
 				break;
 			case 'Braintree_Transaction_StatusDetails':
 				$return['timestamp'] = $result->timestamp;
@@ -388,6 +387,9 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 			$data['creditCard'] = array(
 				'paymentMethodNonce' => $options['payment_nonce'],
 			);
+			if(isset($options['billing_address_id'])) {
+				$data['creditCard']['billingAddressId'] = $options['billing_address_id'];
+			}
 			if(isset($options['options'])) {
 				$data['creditCard']['options'] = array();
 				isset($options['options']['verify_card']) && $data['creditCard']['options']['verifyCard'] = $options['options']['verify_card'];
@@ -590,7 +592,7 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 
 	public function generate_unique_id($options = NULL)
 	{
-		$opts = isset($options['customer_id']) ? array('customerID'=>$options['customer_id']) : array();
+		$opts = isset($options['customer_id']) ? array('customerId'=>$options['customer_id']) : array();
 		return Braintree_ClientToken::generate($opts);
 	}
 }
