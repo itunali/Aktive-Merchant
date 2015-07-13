@@ -592,7 +592,9 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 
 	public function generate_unique_id($options = NULL)
 	{
-		$opts = isset($options['customer_id']) ? array('customerId'=>$options['customer_id']) : array();
+		$opts = array();
+		isset($options['merchant_account_id']) && $opts['merchantAccountId'] = $options['merchant_account_id'];
+		isset($options['customer_id']) && $opts['customerId'] = $options['customer_id'];
 		return Braintree_ClientToken::generate($opts);
 	}
 }
