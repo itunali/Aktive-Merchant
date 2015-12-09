@@ -198,7 +198,7 @@ class Merchant_Country
         array('alpha2' => 'PR', 'name' => 'Puerto Rico', 'alpha3' => 'PRI', 'numeric' => '630'),
         array('alpha2' => 'QA', 'name' => 'Qatar', 'alpha3' => 'QAT', 'numeric' => '634'),
         array('alpha2' => 'RE', 'name' => 'Reunion', 'alpha3' => 'REU', 'numeric' => '638'),
-        array('alpha2' => 'RO', 'name' => 'Romania', 'alpha3' => 'ROM', 'numeric' => '642'),
+        array('alpha2' => 'RO', 'name' => 'Romania', 'alpha3' => 'ROU', 'numeric' => '642'),
         array('alpha2' => 'RU', 'name' => 'Russian Federation', 'alpha3' => 'RUS', 'numeric' => '643'),
         array('alpha2' => 'RW', 'name' => 'Rwanda', 'alpha3' => 'RWA', 'numeric' => '646'),
         array('alpha2' => 'BL', 'name' => 'Saint Barthélemy', 'alpha3' => 'BLM', 'numeric' => '652'),
