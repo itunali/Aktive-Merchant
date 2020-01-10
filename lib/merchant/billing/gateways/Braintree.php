@@ -144,7 +144,8 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 	private function _parse_result($result)
 	{
 		$return = array();
-		switch (get_class($result)) {
+		$class_name = str_replace('\\','_',get_class($result));
+		switch ($class_name) {
 			case 'Braintree_Result_Error':
 				$return['sended_params'] = $result->params;
 				$return['errors'] = $result->errors->deepAll();
