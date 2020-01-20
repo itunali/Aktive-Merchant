@@ -151,13 +151,13 @@ class Merchant_Billing_Braintree extends Merchant_Billing_Gateway implements Mer
 				$return['errors'] = $result->errors->deepAll();
 				$return['message'] = $result->message;
 				if(isset($result->verification)){
-					$return['fraud_review'] = $result->verification['processorResponseCode']==2000?true:false;
+					$return['fraud_review'] = $result->verification->processorResponseCode==2000?true:false;
 					$return['avs_result'] = array(
-						'code'=>$result->verification['avsErrorResponseCode'],
-						'street_match'=>$result->verification['avsStreetAddressResponseCode'],
-						'postal_match'=>$result->verification['avsPostalCodeResponseCode']
+						'code'=>$result->verification->avsErrorResponseCode,
+						'street_match'=>$result->verification->avsStreetAddressResponseCode,
+						'postal_match'=>$result->verification->avsPostalCodeResponseCode
 					);
-					$return['cvv_result'] = $result->verification['cvvResponseCode'];
+					$return['cvv_result'] = $result->verification->cvvResponseCode;
 				}
 
 			case 'Braintree_Result_Successful':
